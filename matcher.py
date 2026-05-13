@@ -3,7 +3,7 @@ import numpy as np
 import json
 import os
 
-model = SentenceTransformer('snunlp/KR-SBERT-V40K-klueNLI-augSTS')
+model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 def load_recall_db():
     path = os.path.join('data', 'recall_db.json')
