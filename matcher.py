@@ -1,9 +1,7 @@
-from sentence_transformers import SentenceTransformer
-import numpy as np
 import json
 import os
-
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def load_recall_db():
     path = os.path.join('data', 'recall_db.json')
@@ -15,22 +13,23 @@ def make_recall_text(item):
 
 def match(query_text):
     db = load_recall_db()
-    
     recall_texts = [make_recall_text(item) for item in db]
-    
-    query_vec = model.encode(query_text)
-    recall_vecs = model.encode(recall_texts)
-    
-    scores = np.dot(recall_vecs, query_vec) / (
-        np.linalg.norm(recall_vecs, axis=1) * np.linalg.norm(query_vec) + 1e-10
-    )
-    
+
+    vectorizer = TfidfVectorizer()
+    all_texts = [query_text] + recall_texts
+    tfidf_matrix = vectorizer.fit_transform(all_texts)
+
+    query_vec = tfidf_matrix[0]
+    recall_vecs = tfidf_matrix[1:]
+
+    scores = cosine_similarity(query_vec, recall_vecs)[0]
+
     results = []
     for i, item in enumerate(db):
         results.append({
             'recall': item,
             'score': float(scores[i])
         })
-    
+
     results.sort(key=lambda x: x['score'], reverse=True)
     return results
